@@ -1,0 +1,57 @@
+# Contributor: Ben Knight <benknight135@users.noreply.github.com>
+
+_realname=coturn
+pkgbase="mingw-w64-${_realname}"
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=4.7.0
+pkgrel=1
+pkgdesc="TURN and STUN server (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url="https://github.com/coturn/coturn"
+msys2_repository_url="https://github.com/coturn/coturn"
+license=('spdx:BSD-3-Clause')
+depends=(
+  "${MINGW_PACKAGE_PREFIX}-libevent"
+  "${MINGW_PACKAGE_PREFIX}-openssl"
+  "${MINGW_PACKAGE_PREFIX}-sqlite"
+)
+makedepends=(
+  "${MINGW_PACKAGE_PREFIX}-cc"
+)
+source=("${url}/archive/refs/tags/${pkgver}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('adbc90550d326e1b0fef4ccf9955c0ea32e63792acedcbc9cdbe9f71f380e622')
+
+build() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  TURN_NO_HIREDIS=1 \
+  TURN_NO_MONGO=1 \
+  TURN_NO_MYSQL=1 \
+  TURN_NO_PQ=1 \
+  TURN_NO_PROMETHEUS=1 \
+  TURN_NO_SCTP=1 \
+  TURN_NO_SYSTEMD=1 \
+  ./configure \
+    --prefix="${MINGW_PREFIX}" \
+    --bindir="${MINGW_PREFIX}/bin" \
+    --sysconfdir="${MINGW_PREFIX}/etc/coturn" \
+    --datadir="${MINGW_PREFIX}/share/coturn" \
+    --docdir="${MINGW_PREFIX}/share/doc/coturn" \
+    --examplesdir="${MINGW_PREFIX}/share/examples/coturn" \
+    --turndbdir="${MINGW_PREFIX}/var/lib/coturn" \
+    --turnincludedir="${MINGW_PREFIX}/include/turn" \
+    --libdir="${MINGW_PREFIX}/lib" \
+    --mandir="${MINGW_PREFIX}" \
+    --disable-rpath
+
+  make
+}
+
+package() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+
+  install -Dm644 LICENSE \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}
